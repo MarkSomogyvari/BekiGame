@@ -1,5 +1,3 @@
-import type { GamePhase } from '../types/game';
-
 export const PHASE_CONFIG: Record<string, { duration: number; title: string; description: string }> = {
   INTRODUCTION: {
     duration: 0,

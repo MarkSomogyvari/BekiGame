@@ -66,7 +66,7 @@ function App() {
       default:
         return (
           <div className="card">
-            <h2>{selectedRole.replace('_', ' ')} Interface</h2>
+            <h2>{(selectedRole as string).replace('_', ' ')} Interface</h2>
             <p>Work in progress for this role.</p>
           </div>
         );

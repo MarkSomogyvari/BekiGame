@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { GameState, GamePhase, Card, Proposal, Message } from '../types/game';
+import type { GameState, GamePhase, Card, Message } from '../types/game';
 
 const INITIAL_STATE: GameState = {
   currentPhase: 'INTRODUCTION',
