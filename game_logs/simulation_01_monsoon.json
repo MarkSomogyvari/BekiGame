@@ -1,0 +1,29 @@
+{
+  "gameId": "BG-2026-001",
+  "scenarioName": "Collaborative Monsoon Management",
+  "date": "2026-05-16",
+  "participants": {
+    "GM": "Expert-1",
+    "TeamA": ["Gov-1", "Gov-2", "Gov-3"],
+    "TeamB": ["Comm-1", "Comm-2", "Comm-3"]
+  },
+  "events": [
+    { "time": "00:00", "type": "PHASE_CHANGE", "phase": "INTRODUCTION", "description": "GM explains the river basin scenario." },
+    { "time": "05:00", "type": "PHASE_CHANGE", "phase": "PROPOSAL_CREATION", "description": "Round starts." },
+    { "time": "05:10", "type": "CARD_DRAWN", "cardType": "SEASON", "cardTitle": "Monsoon", "description": "High water levels expected." },
+    { "time": "10:00", "type": "CARD_DRAWN", "cardType": "EXTREME_EVENT", "cardTitle": "Wildlife Conflict", "description": "Elephants entering crops due to flooding in highlands." },
+    { "time": "12:30", "type": "POWER_CARD_USED", "team": "TEAM_B", "expert": "Social Scientist", "description": "Community seeks advice on crop protection." },
+    { "time": "15:00", "type": "CARD_DRAWN", "cardType": "UNCERTAINTY", "cardTitle": "Rainfall Variability", "description": "Prediction models show 20% margin of error." },
+    { "time": "25:00", "type": "PHASE_CHANGE", "phase": "EXCHANGE", "description": "Proposals swapped." },
+    { "time": "27:00", "type": "COMMENT_ADDED", "from": "TEAM_A", "to": "TEAM_B", "text": "Good focus on natural barriers, but how will you handle the logistics of the compensation fund?" },
+    { "time": "28:30", "type": "COMMENT_ADDED", "from": "TEAM_B", "to": "TEAM_A", "text": "The dam release schedule needs to be shared with downstream farmers 48 hours in advance." },
+    { "time": "35:00", "type": "PHASE_CHANGE", "phase": "REVISION", "description": "Teams updating based on feedback." },
+    { "time": "45:00", "type": "PHASE_CHANGE", "phase": "PRESENTATION", "description": "Final solutions shared." }
+  ],
+  "finalProposals": {
+    "TEAM_A": "Integrated Reservoir Management with Early Warning Systems for downstream communities.",
+    "TEAM_B": "Community-led Bio-fencing and diversified cropping to mitigate wildlife conflict."
+  },
+  "outcome": "SUCCESSFUL_COLLABORATION",
+  "judgingNotes": "High inclusion of community feedback in the final Government plan. Effective use of Social Scientist power card."
+}

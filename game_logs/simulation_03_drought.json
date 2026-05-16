@@ -1,0 +1,25 @@
+{
+  "gameId": "BG-2026-003",
+  "scenarioName": "Scarcity and Solidarity",
+  "date": "2026-05-16",
+  "participants": { "GM": "Expert-3", "TeamA": ["Gov-6"], "TeamB": ["Farmer-2", "Fisher-1"] },
+  "events": [
+    { "time": "00:00", "type": "PHASE_CHANGE", "phase": "PROPOSAL_CREATION" },
+    { "time": "00:45", "type": "CARD_DRAWN", "cardType": "SEASON", "cardTitle": "Dry Season" },
+    { "time": "05:00", "type": "CARD_DRAWN", "cardType": "EXTREME_EVENT", "cardTitle": "Severe Drought", "description": "Water table dropped by 5 meters." },
+    { "time": "08:00", "type": "POWER_CARD_USED", "team": "TEAM_B", "expert": "Environmentalist", "description": "Consulting on low-water irrigation." },
+    { "time": "12:00", "type": "POWER_CARD_USED", "team": "TEAM_A", "expert": "Hydrologist", "description": "Analyzing deep aquifer recharge." },
+    { "time": "15:00", "type": "CARD_DRAWN", "cardType": "UNCERTAINTY", "cardTitle": "Incomplete Information", "description": "Pumping data from private wells is unavailable." },
+    { "time": "20:00", "type": "PHASE_CHANGE", "phase": "EXCHANGE" },
+    { "time": "21:30", "type": "COMMENT_ADDED", "from": "TEAM_A", "to": "TEAM_B", "text": "The solar-pump cooperative is a great idea, but we need to ensure it doesn't lead to over-extraction." },
+    { "time": "23:00", "type": "COMMENT_ADDED", "from": "TEAM_B", "to": "TEAM_A", "text": "We agree to limit extraction if the Government provides subsidies for drought-resistant seeds." },
+    { "time": "30:00", "type": "PHASE_CHANGE", "phase": "REVISION" },
+    { "time": "40:00", "type": "PHASE_CHANGE", "phase": "PRESENTATION" }
+  ],
+  "finalProposals": {
+    "TEAM_A": "Aquifer Recharge Program + Subsidy for Drip Irrigation.",
+    "TEAM_B": "Community-managed Water Rationing and Solar-powered Micro-irrigation."
+  },
+  "outcome": "RESOURCE_SHARING_AGREEMENT",
+  "judgingNotes": "Strong consensus on sustainable extraction. Efficient use of Expert consultation to validate technical feasibility."
+}

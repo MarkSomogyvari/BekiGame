@@ -1,0 +1,25 @@
+{
+  "gameId": "BG-2026-002",
+  "scenarioName": "High-Conflict Flash Flood",
+  "date": "2026-05-16",
+  "participants": { "GM": "Expert-2", "TeamA": ["Gov-4", "Gov-5"], "TeamB": ["NGO-1", "Farmer-1"] },
+  "events": [
+    { "time": "00:00", "type": "PHASE_CHANGE", "phase": "PROPOSAL_CREATION" },
+    { "time": "00:30", "type": "CARD_DRAWN", "cardType": "SEASON", "cardTitle": "Monsoon" },
+    { "time": "05:00", "type": "CARD_DRAWN", "cardType": "EXTREME_EVENT", "cardTitle": "Major Flood", "description": "Flash flood destroys embankment in Sector 4." },
+    { "time": "06:00", "type": "POWER_CARD_USED", "team": "TEAM_A", "expert": "Hydrologist" },
+    { "time": "07:30", "type": "MEDIA_BROADCAST", "text": "BREAKING: Sector 4 Embankment Breach. Evacuation ordered." },
+    { "time": "10:00", "type": "CARD_DRAWN", "cardType": "UNCERTAINTY", "cardTitle": "Policy Change", "description": "Emergency funding re-allocated to urban centers." },
+    { "time": "20:00", "type": "PHASE_CHANGE", "phase": "EXCHANGE" },
+    { "time": "22:00", "type": "COMMENT_ADDED", "from": "TEAM_B", "to": "TEAM_A", "text": "This plan prioritizes the industrial zone while leaving the downstream fishing villages completely exposed." },
+    { "time": "24:00", "type": "COMMENT_ADDED", "from": "TEAM_A", "to": "TEAM_B", "text": "Your proposal for local sandbagging is insufficient for the current flow rate; we need structural reinforcement." },
+    { "time": "30:00", "type": "PHASE_CHANGE", "phase": "REVISION" },
+    { "time": "40:00", "type": "PHASE_CHANGE", "phase": "PRESENTATION" }
+  ],
+  "finalProposals": {
+    "TEAM_A": "Prioritized protection of critical infrastructure (Power Plant, Highway) with managed flooding of agricultural polders.",
+    "TEAM_B": "Decentralized disaster response and mobile medical units for remote villages."
+  },
+  "outcome": "CONFLICT_UNRESOLVED",
+  "judgingNotes": "Government focused on macro-economic stability; Community focused on immediate survival. Lack of common ground on fund allocation."
+}
