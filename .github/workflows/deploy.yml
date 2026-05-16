@@ -45,7 +45,9 @@ jobs:
         working-directory: webapp
 
       - name: Build
-        run: npm run build
+        run: |
+          echo "${{ secrets.secret1 }}" > .env
+          npm run build
         working-directory: webapp
 
       - name: Setup Pages

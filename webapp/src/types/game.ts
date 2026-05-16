@@ -35,6 +35,7 @@ export interface Message {
 }
 
 export interface GameState {
+  roomCode?: string;
   currentPhase: GamePhase;
   phaseStartTime: number;
   activeSeason: Card | null;

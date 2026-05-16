@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { GameState, GamePhase, Card, Message } from '../types/game';
+import { supabase } from '../supabaseClient';
 
 const INITIAL_STATE: GameState = {
   currentPhase: 'INTRODUCTION',
@@ -22,73 +23,180 @@ const INITIAL_STATE: GameState = {
 };
 
 export function useGameState() {
-  const [state, setState] = useState<GameState>(() => {
-    const saved = localStorage.getItem('bekigame_state');
-    return saved ? JSON.parse(saved) : INITIAL_STATE;
-  });
+  const [state, setState] = useState<GameState>(INITIAL_STATE);
+  const [roomCode, setRoomCode] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Load initial state from localStorage for persistence if no room
   useEffect(() => {
-    localStorage.setItem('bekigame_state', JSON.stringify(state));
-  }, [state]);
+    if (!roomCode) {
+      const saved = localStorage.getItem('bekigame_state');
+      if (saved) setState(JSON.parse(saved));
+    }
+  }, [roomCode]);
+
+  // Save to localStorage
+  useEffect(() => {
+    if (!roomCode) {
+      localStorage.setItem('bekigame_state', JSON.stringify(state));
+    }
+  }, [state, roomCode]);
+
+  // Sync with Supabase
+  useEffect(() => {
+    if (!roomCode || !supabase.supabaseUrl) return;
+
+    const fetchState = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('state')
+        .eq('room_code', roomCode)
+        .single();
+
+      if (data) {
+        setState(data.state);
+      }
+      setIsLoading(false);
+    };
+
+    fetchState();
+
+    const subscription = supabase
+      .channel(`room:${roomCode}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'sessions', 
+        filter: `room_code=eq.${roomCode}` 
+      }, (payload) => {
+        setState(payload.new.state);
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [roomCode]);
+
+  const updateRemoteState = useCallback(async (newState: GameState) => {
+    if (!roomCode || !supabase.supabaseUrl) return;
+
+    await supabase
+      .from('sessions')
+      .update({ state: newState, updated_at: new Date().toISOString() })
+      .eq('room_code', roomCode);
+  }, [roomCode]);
+
+  const createRoom = async () => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const newState = { ...INITIAL_STATE, roomCode: code };
+    
+    if (supabase.supabaseUrl) {
+      const { error } = await supabase
+        .from('sessions')
+        .insert([{ room_code: code, state: newState }]);
+      
+      if (error) {
+        console.error('Error creating room:', error);
+        return;
+      }
+    }
+    
+    setRoomCode(code);
+    setState(newState);
+  };
+
+  const joinRoom = async (code: string) => {
+    if (!supabase.supabaseUrl) return;
+    
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('state')
+      .eq('room_code', code.toUpperCase())
+      .single();
+
+    if (data) {
+      setRoomCode(code.toUpperCase());
+      setState(data.state);
+    } else {
+      alert('Room not found');
+    }
+    setIsLoading(false);
+  };
 
   const setPhase = (phase: GamePhase) => {
-    setState(prev => ({
-      ...prev,
+    const newState = {
+      ...state,
       currentPhase: phase,
       phaseStartTime: Date.now(),
-    }));
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
   const updateProposal = (team: 'TEAM_A' | 'TEAM_B', content: string) => {
-    setState(prev => ({
-      ...prev,
+    const newState = {
+      ...state,
       proposals: {
-        ...prev.proposals,
-        [team]: { ...prev.proposals[team], content, lastUpdated: Date.now() }
+        ...state.proposals,
+        [team]: { ...state.proposals[team], content, lastUpdated: Date.now() }
       }
-    }));
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
   const addComment = (targetTeam: 'TEAM_A' | 'TEAM_B', comment: string) => {
-    setState(prev => ({
-      ...prev,
+    const newState = {
+      ...state,
       proposals: {
-        ...prev.proposals,
+        ...state.proposals,
         [targetTeam]: { 
-          ...prev.proposals[targetTeam], 
-          comments: [...prev.proposals[targetTeam].comments, comment] 
+          ...state.proposals[targetTeam], 
+          comments: [...state.proposals[targetTeam].comments, comment] 
         }
       }
-    }));
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
   const drawCard = (type: 'SEASON' | 'EXTREME_EVENT' | 'UNCERTAINTY', card: Card) => {
-    setState(prev => ({
-      ...prev,
-      [`active${type.split('_').map(w => w[0] + w.slice(1).toLowerCase()).join('')}`]: card
-    }));
+    const typeKey = `active${type.split('_').map(w => w[0] + w.slice(1).toLowerCase()).join('')}` as keyof GameState;
+    const newState = {
+      ...state,
+      [typeKey]: card
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
   const usePowerCard = (team: 'TEAM_A' | 'TEAM_B') => {
-    setState(prev => ({
-      ...prev,
+    const newState = {
+      ...state,
       powerCardsUsed: {
-        ...prev.powerCardsUsed,
-        [team]: prev.powerCardsUsed[team] + 1
+        ...state.powerCardsUsed,
+        [team]: state.powerCardsUsed[team] + 1
       },
       consultationActive: true,
-      consultationTimer: 120, // 2 minutes
+      consultationTimer: 120,
       consultingTeam: team
-    }));
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
   const endConsultation = () => {
-    setState(prev => ({
-      ...prev,
+    const newState = {
+      ...state,
       consultationActive: false,
       consultationTimer: 0,
       consultingTeam: null
-    }));
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
   const sendMediaMessage = (text: string) => {
@@ -98,16 +206,31 @@ export function useGameState() {
       text,
       timestamp: Date.now()
     };
-    setState(prev => ({
-      ...prev,
-      mediaMessages: [newMessage, ...prev.mediaMessages]
-    }));
+    const newState = {
+      ...state,
+      mediaMessages: [newMessage, ...state.mediaMessages]
+    };
+    setState(newState);
+    updateRemoteState(newState);
   };
 
-  const resetGame = () => setState(INITIAL_STATE);
+  const resetGame = () => {
+    setState(INITIAL_STATE);
+    if (roomCode) updateRemoteState(INITIAL_STATE);
+  };
+
+  const leaveRoom = () => {
+    setRoomCode(null);
+    setState(INITIAL_STATE);
+  };
 
   return { 
     state, 
+    roomCode,
+    isLoading,
+    createRoom,
+    joinRoom,
+    leaveRoom,
     setPhase, 
     updateProposal, 
     addComment, 
