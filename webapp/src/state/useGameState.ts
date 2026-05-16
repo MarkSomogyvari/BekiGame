@@ -44,11 +44,11 @@ export function useGameState() {
 
   // Sync with Supabase
   useEffect(() => {
-    if (!roomCode || !supabase.supabaseUrl) return;
+    if (!roomCode || !import.meta.env.VITE_SUPABASE_URL) return;
 
     const fetchState = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('sessions')
         .select('state')
         .eq('room_code', roomCode)
@@ -80,7 +80,7 @@ export function useGameState() {
   }, [roomCode]);
 
   const updateRemoteState = useCallback(async (newState: GameState) => {
-    if (!roomCode || !supabase.supabaseUrl) return;
+    if (!roomCode || !import.meta.env.VITE_SUPABASE_URL) return;
 
     await supabase
       .from('sessions')
@@ -92,7 +92,7 @@ export function useGameState() {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     const newState = { ...INITIAL_STATE, roomCode: code };
     
-    if (supabase.supabaseUrl) {
+    if (import.meta.env.VITE_SUPABASE_URL) {
       const { error } = await supabase
         .from('sessions')
         .insert([{ room_code: code, state: newState }]);
@@ -108,10 +108,10 @@ export function useGameState() {
   };
 
   const joinRoom = async (code: string) => {
-    if (!supabase.supabaseUrl) return;
+    if (!import.meta.env.VITE_SUPABASE_URL) return;
     
     setIsLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('sessions')
       .select('state')
       .eq('room_code', code.toUpperCase())
