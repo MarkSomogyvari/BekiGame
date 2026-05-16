@@ -1,0 +1,9 @@
+# Project-wide ignores
+node_modules/
+.DS_Store
+*.log
+
+# Webapp build artifacts (handled by webapp/.gitignore usually, but good to have here)
+webapp/dist/
+webapp/node_modules/
+webapp/.local
