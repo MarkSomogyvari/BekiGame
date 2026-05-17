@@ -26,6 +26,7 @@ export function useGameState() {
   const [state, setState] = useState<GameState>(INITIAL_STATE);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   // Load initial state from localStorage for persistence if no room
   useEffect(() => {
@@ -44,20 +45,24 @@ export function useGameState() {
 
   // Sync with Supabase
   useEffect(() => {
-    if (!roomCode || !import.meta.env.VITE_SUPABASE_URL) return;
+    if (!roomCode || !isSupabaseConfigured) return;
 
     const fetchState = async () => {
-      setIsLoading(true);
-      const { data } = await supabase
-        .from('sessions')
-        .select('state')
-        .eq('room_code', roomCode)
-        .single();
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('sessions')
+          .select('state')
+          .eq('room_code', roomCode)
+          .single();
 
-      if (data) {
-        setState(data.state);
+        if (error) throw error;
+        if (data) setState(data.state);
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchState();
@@ -77,53 +82,70 @@ export function useGameState() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [roomCode]);
+  }, [roomCode, isSupabaseConfigured]);
 
   const updateRemoteState = useCallback(async (newState: GameState) => {
-    if (!roomCode || !import.meta.env.VITE_SUPABASE_URL) return;
+    if (!roomCode || !isSupabaseConfigured) return;
 
-    await supabase
-      .from('sessions')
-      .update({ state: newState, updated_at: new Date().toISOString() })
-      .eq('room_code', roomCode);
-  }, [roomCode]);
+    try {
+      await supabase
+        .from('sessions')
+        .update({ state: newState, updated_at: new Date().toISOString() })
+        .eq('room_code', roomCode);
+    } catch (err) {
+      console.error('Update error:', err);
+    }
+  }, [roomCode, isSupabaseConfigured]);
 
   const createRoom = async () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const newState = { ...INITIAL_STATE, roomCode: code };
-    
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      const { error } = await supabase
-        .from('sessions')
-        .insert([{ room_code: code, state: newState }]);
+    setIsLoading(true);
+    try {
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const newState = { ...INITIAL_STATE, roomCode: code };
       
-      if (error) {
-        console.error('Error creating room:', error);
-        return;
+      if (isSupabaseConfigured) {
+        const { error } = await supabase
+          .from('sessions')
+          .insert([{ room_code: code, state: newState }]);
+        
+        if (error) throw error;
       }
+      
+      setRoomCode(code);
+      setState(newState);
+    } catch (err) {
+      console.error('Error creating room:', err);
+      alert('Failed to create room on server. Check console for details.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setRoomCode(code);
-    setState(newState);
   };
 
   const joinRoom = async (code: string) => {
-    if (!import.meta.env.VITE_SUPABASE_URL) return;
+    if (!isSupabaseConfigured) {
+      alert('Cloud sync is not configured.');
+      return;
+    }
     
     setIsLoading(true);
-    const { data } = await supabase
-      .from('sessions')
-      .select('state')
-      .eq('room_code', code.toUpperCase())
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('state')
+        .eq('room_code', code.toUpperCase())
+        .single();
 
-    if (data) {
-      setRoomCode(code.toUpperCase());
-      setState(data.state);
-    } else {
-      alert('Room not found');
+      if (error) throw error;
+      if (data) {
+        setRoomCode(code.toUpperCase());
+        setState(data.state);
+      }
+    } catch (err) {
+      console.error('Join error:', err);
+      alert('Room not found or connection failed.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const setPhase = (phase: GamePhase) => {

@@ -39,11 +39,24 @@ function App() {
 
   // Room Selection Screen
   if (!roomCode) {
+    const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
     return (
       <div className="container">
         <header>
           <h1>BekiGame</h1>
           <p>River Basin Decision-Making Serious Game</p>
+          <div style={{ 
+            display: 'inline-block', 
+            padding: '4px 12px', 
+            borderRadius: '20px', 
+            fontSize: '12px', 
+            background: isSupabaseConfigured ? '#c6f6d5' : '#fed7d7',
+            color: isSupabaseConfigured ? '#22543d' : '#822727',
+            marginTop: '10px'
+          }}>
+            {isSupabaseConfigured ? '● Cloud Sync Active' : '○ Local Mode Only'}
+          </div>
         </header>
         
         <main>
@@ -51,7 +64,13 @@ function App() {
             <section className="card">
               <h2>Start New Session</h2>
               <p>Create a unique room code to invite others to your game.</p>
-              <button className="btn btn-primary" onClick={createRoom}>Create Room</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={createRoom} 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creating...' : 'Create Room'}
+              </button>
             </section>
 
             <section className="card">
@@ -68,15 +87,11 @@ function App() {
               <button 
                 className="btn btn-primary" 
                 onClick={() => joinRoom(inputRoomCode)}
-                disabled={!inputRoomCode}
+                disabled={!inputRoomCode || isLoading}
               >
-                Join Room
+                {isLoading ? 'Joining...' : 'Join Room'}
               </button>
             </section>
-          </div>
-          
-          <div style={{ marginTop: '40px', textAlign: 'center' }}>
-            <p style={{ opacity: 0.6, fontSize: '14px' }}>Note: Real-time synchronization requires a Supabase configuration.</p>
           </div>
         </main>
       </div>
