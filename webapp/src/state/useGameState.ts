@@ -32,6 +32,7 @@ export function useGameState() {
   useEffect(() => {
     if (!roomCode) {
       const saved = localStorage.getItem('bekigame_state');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved) setState(JSON.parse(saved));
     }
   }, [roomCode]);
