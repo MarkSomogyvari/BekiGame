@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { GameState, Role } from '../../types/game';
 import { POWER_CARD_LIMIT } from '../../constants/rules';
 
@@ -17,6 +17,32 @@ export function TeamView({ role, state, updateProposal, addComment, onUsePowerCa
   const otherProposal = state.proposals[otherTeam];
   
   const [commentText, setCommentText] = useState('');
+  const [localContent, setLocalContent] = useState(proposal.content);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Sync props -> localContent when NOT focused
+  useEffect(() => {
+    if (!isFocused) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalContent(proposal.content);
+    }
+  }, [proposal.content, isFocused]);
+
+  // Debounced sync localContent -> global state
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const timer = setTimeout(() => {
+      updateProposal(team, localContent);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localContent, isFocused, team, updateProposal]);
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    updateProposal(team, localContent);
+  };
 
   const isProposalPhase = state.currentPhase === 'PROPOSAL_CREATION' || state.currentPhase === 'REVISION';
   const isExchangePhase = state.currentPhase === 'EXCHANGE';
@@ -51,8 +77,10 @@ export function TeamView({ role, state, updateProposal, addComment, onUsePowerCa
                   border: '2px solid var(--color-border)',
                   fontFamily: 'var(--font-sans)'
                 }}
-                value={proposal.content}
-                onChange={(e) => updateProposal(team, e.target.value)}
+                value={localContent}
+                onChange={(e) => setLocalContent(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={handleBlur}
                 placeholder="Type your strategic proposal here..."
               />
             </div>
