@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { GameState, GamePhase, Card, Message } from '../types/game';
 import { supabase } from '../supabaseClient';
 
@@ -27,6 +27,11 @@ export function useGameState() {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   // Load initial state from localStorage for persistence if no room
   useEffect(() => {
@@ -149,59 +154,59 @@ export function useGameState() {
     }
   };
 
-  const setPhase = (phase: GamePhase) => {
+  const setPhase = useCallback((phase: GamePhase) => {
     const newState = {
-      ...state,
+      ...stateRef.current,
       currentPhase: phase,
       phaseStartTime: Date.now(),
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const updateProposal = (team: 'TEAM_A' | 'TEAM_B', content: string) => {
+  const updateProposal = useCallback((team: 'TEAM_A' | 'TEAM_B', content: string) => {
     const newState = {
-      ...state,
+      ...stateRef.current,
       proposals: {
-        ...state.proposals,
-        [team]: { ...state.proposals[team], content, lastUpdated: Date.now() }
+        ...stateRef.current.proposals,
+        [team]: { ...stateRef.current.proposals[team], content, lastUpdated: Date.now() }
       }
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const addComment = (targetTeam: 'TEAM_A' | 'TEAM_B', comment: string) => {
+  const addComment = useCallback((targetTeam: 'TEAM_A' | 'TEAM_B', comment: string) => {
     const newState = {
-      ...state,
+      ...stateRef.current,
       proposals: {
-        ...state.proposals,
+        ...stateRef.current.proposals,
         [targetTeam]: { 
-          ...state.proposals[targetTeam], 
-          comments: [...state.proposals[targetTeam].comments, comment] 
+          ...stateRef.current.proposals[targetTeam], 
+          comments: [...stateRef.current.proposals[targetTeam].comments, comment] 
         }
       }
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const drawCard = (type: 'SEASON' | 'EXTREME_EVENT' | 'UNCERTAINTY', card: Card) => {
+  const drawCard = useCallback((type: 'SEASON' | 'EXTREME_EVENT' | 'UNCERTAINTY', card: Card) => {
     const typeKey = `active${type.split('_').map(w => w[0] + w.slice(1).toLowerCase()).join('')}` as keyof GameState;
     const newState = {
-      ...state,
+      ...stateRef.current,
       [typeKey]: card
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const usePowerCard = (team: 'TEAM_A' | 'TEAM_B') => {
+  const usePowerCard = useCallback((team: 'TEAM_A' | 'TEAM_B') => {
     const newState = {
-      ...state,
+      ...stateRef.current,
       powerCardsUsed: {
-        ...state.powerCardsUsed,
-        [team]: state.powerCardsUsed[team] + 1
+        ...stateRef.current.powerCardsUsed,
+        [team]: stateRef.current.powerCardsUsed[team] + 1
       },
       consultationActive: true,
       consultationTimer: 120,
@@ -209,20 +214,20 @@ export function useGameState() {
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const endConsultation = () => {
+  const endConsultation = useCallback(() => {
     const newState = {
-      ...state,
+      ...stateRef.current,
       consultationActive: false,
       consultationTimer: 0,
       consultingTeam: null
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const sendMediaMessage = (text: string) => {
+  const sendMediaMessage = useCallback((text: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       sender: 'Media Bureau',
@@ -230,22 +235,22 @@ export function useGameState() {
       timestamp: Date.now()
     };
     const newState = {
-      ...state,
-      mediaMessages: [newMessage, ...state.mediaMessages]
+      ...stateRef.current,
+      mediaMessages: [newMessage, ...stateRef.current.mediaMessages]
     };
     setState(newState);
     updateRemoteState(newState);
-  };
+  }, [updateRemoteState]);
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     setState(INITIAL_STATE);
     if (roomCode) updateRemoteState(INITIAL_STATE);
-  };
+  }, [roomCode, updateRemoteState]);
 
-  const leaveRoom = () => {
+  const leaveRoom = useCallback(() => {
     setRoomCode(null);
     setState(INITIAL_STATE);
-  };
+  }, []);
 
   return { 
     state, 
