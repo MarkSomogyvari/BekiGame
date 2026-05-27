@@ -18,37 +18,32 @@ export function TeamView({ role, state, updateProposal, addComment, onUsePowerCa
   
   const [commentText, setCommentText] = useState('');
   const [localContent, setLocalContent] = useState(proposal.content);
-  const [isFocused, setIsFocused] = useState(false);
 
-  // Sync props -> localContent when NOT focused
+  // Sync props -> localContent ONLY when phase changes or proposal ID changes (prevents jumpbacks during typing)
   useEffect(() => {
-    if (!isFocused) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLocalContent(proposal.content);
-    }
-  }, [proposal.content, isFocused]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalContent(proposal.content);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentPhase, proposal.id]);
 
   // Debounced sync localContent -> global state
   useEffect(() => {
-    if (!isFocused) return;
-
     const timer = setTimeout(() => {
       updateProposal(team, localContent);
-    }, 500);
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [localContent, isFocused, team, updateProposal]);
+  }, [localContent, team, updateProposal]);
 
   const handleBlur = () => {
-    setIsFocused(false);
     updateProposal(team, localContent);
   };
 
   const isProposalPhase = state.currentPhase === 'PROPOSAL_CREATION' || state.currentPhase === 'REVISION';
   const isExchangePhase = state.currentPhase === 'EXCHANGE';
 
-  const teamName = team === 'TEAM_A' ? 'Bhutanese Hydropower Authority (Government)' : 'Assam Downstream Community (Local)';
-  const otherTeamName = otherTeam === 'TEAM_A' ? 'Bhutanese Hydropower Authority (Government)' : 'Assam Downstream Community (Local)';
+  const teamName = team === 'TEAM_A' ? 'Government Team' : 'Community Team';
+  const otherTeamName = otherTeam === 'TEAM_A' ? 'Government Team' : 'Community Team';
   const accentColor = team === 'TEAM_A' ? 'var(--sediment-brown)' : 'var(--eco-green)';
 
   return (
@@ -79,7 +74,6 @@ export function TeamView({ role, state, updateProposal, addComment, onUsePowerCa
                 }}
                 value={localContent}
                 onChange={(e) => setLocalContent(e.target.value)}
-                onFocus={() => setIsFocused(true)}
                 onBlur={handleBlur}
                 placeholder="Type your strategic proposal here..."
               />

@@ -8,7 +8,7 @@ interface Props {
 export function ExpertView({ state, endConsultation }: Props) {
   const activeTeam = state.consultingTeam;
   const proposal = activeTeam ? state.proposals[activeTeam] : null;
-  const teamName = activeTeam === 'TEAM_A' ? 'Bhutanese Hydropower Authority (Government)' : 'Assam Downstream Community (Local)';
+  const teamName = activeTeam === 'TEAM_A' ? 'Government Team' : 'Community Team';
 
   return (
     <div className="expert-view" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '30px' }}>
